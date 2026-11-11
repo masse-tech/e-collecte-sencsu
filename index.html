@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>E-Collecte SEN-CSU</title>
+  <meta name="description" content="Enrôlement des bénéficiaires de la couverture sanitaire universelle, avec ou sans Internet.">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16241c" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-64.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="E-Collecte">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preload" href="fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="tricolore" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffc42f"/><stop offset=".55" stop-color="#e23b28"/><stop offset="1" stop-color="#00783f"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  <div class="app" id="app">
+    <header class="topbar">
+      <a class="brand" href="#/" aria-label="E-Collecte, accueil">
+        <img src="icons/icon-192.png" alt="" width="38" height="38">
+        <span><b>E-Collecte</b><span>SEN-CSU, enrôlement des bénéficiaires</span></span>
+      </a>
+      <span class="net" id="net" role="status">En ligne</span>
+    </header>
+    <nav class="nav" aria-label="Navigation principale">
+      <a href="#/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7M9 8h4"/></svg>Formulaires</a>
+      <a href="#/donnees"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg>Données<span class="badge" data-badge hidden></span></a>
+      <a href="#/bilan"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Bilan</a>
+      <a href="#/reglages"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Réglages</a>
+    </nav>
+    <main id="main" tabindex="-1"></main>
+  </div>
+  <div class="toasts" id="toasts"></div>
+  <noscript>Activez JavaScript pour utiliser E-Collecte.</noscript>
+  <script src="vendor/xlsx.full.min.js"></script>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="js/xpath.js"></script>
+  <script src="js/xlsform.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

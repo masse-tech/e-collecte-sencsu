@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-Collecte SEN-CSU — Guide d'installation</title>
+<style>
+  :root { --green:#00783f; --ink:#14261c; --muted:#4b5d52; --line:#d3ddd6; --leaf:#e3f1e8; --sun:#fff4d6; }
+  body { margin:0; font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); background:#fff; }
+  main { max-width:760px; margin:0 auto; padding:32px 20px 60px; }
+  header img { height:56px; }
+  h1 { font-size:1.9rem; margin:.4em 0 .2em; line-height:1.2; }
+  h2 { font-size:1.3rem; margin:2em 0 .5em; padding-top:.6em; border-top:3px solid var(--green); }
+  h3 { font-size:1.05rem; margin:1.4em 0 .3em; }
+  p, li { max-width:70ch; }
+  ol li { margin:.35em 0; }
+  code { background:var(--leaf); padding:1px 6px; border-radius:4px; font-size:.92em; }
+  pre { background:#f5f7f4; border:1px solid var(--line); border-radius:8px; padding:12px; overflow-x:auto; font-size:.88em; }
+  .note { background:var(--sun); border-radius:10px; padding:12px 16px; margin:1em 0; }
+  table { border-collapse:collapse; width:100%; margin:1em 0; font-size:.95em; }
+  th, td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--leaf); }
+  .muted { color:var(--muted); }
+  @media print { h2 { break-before:auto; } main { padding:0; } }
+</style>
+</head>
+<body>
+<main>
+<header><img src="media/logo_sencsu.png" alt="SEN-CSU"></header>
+<h1>E-Collecte SEN-CSU — Guide d'installation</h1>
+<p class="muted">Application d'enrôlement des bénéficiaires, hors ligne, pour tablettes, téléphones Android, iPhone, iPad et ordinateurs. Version 1.0.0.</p>
+
+<h2>1. Comment ça marche</h2>
+<p>E-Collecte est une application web installable (PWA). Elle est hébergée à une adresse internet unique ; chaque appareil l'ouvre une première fois avec Internet, l'installe sur l'écran d'accueil, puis fonctionne sans réseau. Les fiches sont enregistrées dans l'appareil et partent automatiquement vers un Google Sheets dès que le réseau revient. Les photos sont rangées dans Google Drive.</p>
+<table>
+<tr><th>Élément</th><th>Rôle</th></tr>
+<tr><td>Dossier de l'application</td><td>À héberger en https (Netlify, GitHub Pages ou serveur SEN-CSU)</td></tr>
+<tr><td><code>forms/</code></td><td>Les 12 formulaires XLSForm (Kobo), utilisés tels quels</td></tr>
+<tr><td><code>backend/Code.gs</code></td><td>Serveur de réception à coller dans Google Apps Script</td></tr>
+<tr><td><code>outils/publier.py</code></td><td>À lancer après toute modification (nouvelle version pour les appareils)</td></tr>
+</table>
+
+<h2>2. Héberger l'application</h2>
+<p>L'adresse doit être en <strong>https</strong> : sans cela, ni la caméra, ni le GPS, ni l'installation ne fonctionnent.</p>
+<h3>Option A — Netlify Drop (le plus rapide, gratuit)</h3>
+<ol>
+<li>Décompressez le ZIP sur votre ordinateur.</li>
+<li>Ouvrez <code>https://app.netlify.com/drop</code> et créez un compte gratuit.</li>
+<li>Glissez le dossier <code>e-collecte-sencsu</code> dans la page. Netlify donne une adresse du type <code>https://xxxx.netlify.app</code>.</li>
+<li>Dans <em>Site configuration &gt; Change site name</em>, choisissez un nom clair, par exemple <code>ecollecte-sencsu-dakar</code>.</li>
+<li>Pour publier une mise à jour : onglet <em>Deploys</em>, glissez à nouveau le dossier.</li>
+</ol>
+<h3>Option B — GitHub Pages</h3>
+<ol>
+<li>Créez un dépôt GitHub, envoyez-y le contenu du dossier.</li>
+<li><em>Settings &gt; Pages</em> : source « Deploy from a branch », branche <code>main</code>, dossier <code>/ (root)</code>.</li>
+<li>L'adresse sera <code>https://votre-compte.github.io/nom-du-depot/</code>.</li>
+</ol>
+<h3>Option C — Serveur interne SEN-CSU (Nginx)</h3>
+<pre>server {
+  listen 443 ssl;
+  server_name ecollecte.sencsu.sn;
+  root /var/www/e-collecte-sencsu;
+  location = /sw.js { add_header Cache-Control "no-cache"; }
+  location /forms/ { add_header Cache-Control "no-cache"; }
+  types { application/manifest+json webmanifest; }
+}</pre>
+<p>Un certificat gratuit s'obtient avec Let's Encrypt (<code>certbot --nginx</code>).</p>
+
+<h2>3. Créer le serveur de réception (Google Sheets)</h2>
+<ol>
+<li>Avec le compte Google de la structure, créez un Google Sheets nommé <strong>E-Collecte SEN-CSU</strong>.</li>
+<li>Menu <em>Extensions &gt; Apps Script</em>. Effacez le contenu, collez tout le fichier <code>backend/Code.gs</code>.</li>
+<li>Ligne <code>CLE_ACCES</code> : remplacez la valeur par une clé longue de votre choix (ex. <code>SenCSU-Dkr-2026-x7Kq9</code>). Enregistrez.</li>
+<li>Choisissez la fonction <code>autoriser</code> dans la liste, cliquez <em>Exécuter</em>, acceptez les autorisations (Drive et Sheets).</li>
+<li><em>Déployer &gt; Nouveau déploiement</em> &gt; type <strong>Application Web</strong> :
+  <ul><li>Exécuter en tant que : <strong>Moi</strong></li><li>Qui a accès : <strong>Tout le monde</strong></li></ul></li>
+<li>Copiez l'<strong>URL de l'application Web</strong> (elle se termine par <code>/exec</code>).</li>
+<li>Partagez le Google Sheets et le dossier Drive « E-Collecte SEN-CSU - Photos » avec les superviseurs (en lecture).</li>
+</ol>
+<div class="note"><strong>Important.</strong> Si vous modifiez <code>Code.gs</code> plus tard, faites <em>Déployer &gt; Gérer les déploiements &gt; modifier &gt; Nouvelle version</em> : l'adresse <code>/exec</code> reste la même et les appareils n'ont rien à changer.</div>
+<p>Chaque formulaire a son onglet (ex. « MSD Keur Massar - Adhésion familiale »), et les personnes à charge, élèves et ndongo daara ont un onglet lié par la colonne <code>_parent_uuid</code>. Une fiche renvoyée après correction remplace l'ancienne ligne : pas de doublon.</p>
+
+<h2>4. Installer sur chaque appareil</h2>
+<p>Première ouverture avec Internet obligatoire (téléchargement des formulaires), ensuite plus besoin.</p>
+<table>
+<tr><th>Appareil</th><th>Procédure</th></tr>
+<tr><td>Tablette ou téléphone Android</td><td>Ouvrir l'adresse dans <strong>Chrome</strong> &gt; menu ⋮ &gt; <strong>Installer l'application</strong> (ou « Ajouter à l'écran d'accueil »). Autoriser la caméra et la position quand l'application le demande.</td></tr>
+<tr><td>iPhone / iPad</td><td>Ouvrir l'adresse dans <strong>Safari</strong> (pas Chrome) &gt; bouton Partager &gt; <strong>Sur l'écran d'accueil</strong> &gt; Ajouter. Réglages iPhone &gt; Safari : autoriser Caméra et Position.</td></tr>
+<tr><td>Ordinateur Windows / Mac</td><td>Ouvrir dans <strong>Chrome ou Edge</strong> &gt; icône d'installation à droite de la barre d'adresse &gt; Installer.</td></tr>
+</table>
+<h3>Configuration à faire une fois par appareil</h3>
+<ol>
+<li>Ouvrir E-Collecte &gt; <strong>Réglages</strong>.</li>
+<li><em>Mon profil d'agent</em> : prénoms et nom, téléphone, catégorie (pré-remplis dans chaque fiche).</li>
+<li><em>Envoi des données</em> : coller l'adresse <code>/exec</code> et la clé d'accès, puis <strong>Tester la connexion</strong>.</li>
+<li><em>Formulaires</em> : décocher ceux que l'agent n'utilise pas (ex. un AP de Keur Massar ne garde que MSD Keur Massar).</li>
+<li><em>Sécurité</em> : activer un code à 4 chiffres (recommandé, données personnelles de santé).</li>
+</ol>
+
+<h2>5. Déploiement en masse sur les tablettes des AP (MDM)</h2>
+<ul>
+<li><strong>Google Play géré / Android Enterprise</strong> (Intune, Scalefusion, Hexnode, Google Admin…) : ajoutez E-Collecte comme <em>application Web</em> avec l'adresse https ; elle apparaît sur toutes les tablettes avec son icône. Les mises à jour se font ensuite sans MDM.</li>
+<li><strong>APK</strong> : sur <code>https://www.pwabuilder.com</code>, saisissez l'adresse &gt; <em>Package for stores &gt; Android</em>. Vous obtenez un APK à pousser par le MDM ou à publier sur le Play Store.</li>
+<li><strong>App Store iOS</strong> : possible via PWABuilder, mais nécessite un compte Apple Developer (99 USD/an).</li>
+</ul>
+
+<h2>6. Utilisation au quotidien</h2>
+<ul>
+<li><strong>Formulaires</strong> : touchez un formulaire &gt; « Nouvelle fiche ». La fiche s'enregistre à chaque saisie ; on peut fermer et reprendre plus tard (« Reprendre la saisie en cours »).</li>
+<li>Chaque étape est contrôlée avant de passer à la suivante (champs obligatoires, téléphone, CNI 13 à 17 caractères, montant exact).</li>
+<li>Le GPS se capture tout seul à l'ouverture ; se mettre à découvert si la précision est mauvaise.</li>
+<li>Paiement Wave / Orange Money : le QR code et le montant s'affichent selon le moyen choisi.</li>
+<li><strong>Finaliser la fiche</strong> : vérifie toute la fiche, signale un numéro de pièce déjà saisi, puis met la fiche en « À envoyer ».</li>
+<li><strong>Données</strong> : brouillons, fiches à envoyer, fiches envoyées ; recherche ; bouton <em>Envoyer</em> ; <em>Exporter</em> vers Excel (avec ou sans photos en ZIP).</li>
+<li><strong>Bilan</strong> : personnes enrôlées aujourd'hui et sur 7 jours, par formulaire et par agent, montants versés.</li>
+</ul>
+<div class="note"><strong>Avant de réinitialiser une tablette ou de vider le navigateur</strong> : Réglages &gt; Sauvegarde &gt; <em>Créer une sauvegarde</em>, ou vérifier que l'onglet « À envoyer » est vide. Les fiches non envoyées n'existent que dans l'appareil.</div>
+
+<h2>7. Modifier ou ajouter un formulaire</h2>
+<ol>
+<li>Modifiez le fichier XLSForm dans Excel (même format que Kobo : feuilles <code>survey</code>, <code>choices</code>, <code>settings</code>).</li>
+<li>Remplacez le fichier dans <code>forms/</code> (même nom). Pour un nouveau formulaire, ajoutez une ligne dans <code>forms/index.json</code> (id, fichier, titre, structure).</li>
+<li>Lancez <code>python3 outils/publier.py</code> dans le dossier, puis republiez (Netlify : glisser le dossier).</li>
+<li>Les appareils reçoivent le formulaire à leur prochaine ouverture avec Internet, et un bandeau « Nouvelle version » propose la mise à jour de l'application.</li>
+</ol>
+<p>Pour un essai rapide sur un seul appareil : Réglages &gt; Formulaires &gt; <em>Importer un XLSForm (.xlsx)</em>.</p>
+<p class="muted">Pris en charge : text, integer, decimal, date, select_one, select_multiple, image, geopoint, note, calculate, groupes, répétitions (un niveau), relevant, constraint, required, choice_filter, et les fonctions once, now, today, format-date, date, decimal-date-time, if, concat, count, regex, selected, substring-before/after, number, etc.</p>
+
+<h2>8. Dépannage</h2>
+<table>
+<tr><th>Problème</th><th>Solution</th></tr>
+<tr><td>« Aucun formulaire chargé »</td><td>Ouvrir l'application une fois avec Internet, ou Réglages &gt; Mettre à jour les formulaires.</td></tr>
+<tr><td>Pas de bouton « Installer »</td><td>Vérifier que l'adresse est en https ; sur iPhone utiliser Safari.</td></tr>
+<tr><td>GPS ou caméra refusés</td><td>Réglages du navigateur &gt; Autorisations du site &gt; autoriser Position et Caméra.</td></tr>
+<tr><td>« Clé d'accès incorrecte »</td><td>La clé dans Réglages doit être identique à <code>CLE_ACCES</code> de Code.gs.</td></tr>
+<tr><td>« Serveur : erreur 401/403 »</td><td>Le déploiement Apps Script doit être « Accès : Tout le monde ».</td></tr>
+<tr><td>Fiche « Envoi échoué »</td><td>Elle est conservée ; elle repart seule au prochain envoi (toutes les 5 minutes avec réseau) ou via le bouton Envoyer.</td></tr>
+</table>
+</main>
+</body>
+</html>
